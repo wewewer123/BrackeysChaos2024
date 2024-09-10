@@ -7,8 +7,11 @@ public class FollowPath : MonoBehaviour
 {
 
     public Transform[] waypoints; // number of empty game objects that represent the path in straight lines
+    public float triggerRadius = 0.1f;
     public float speed = 5f; // enemy speed
     public bool reversing = false;
+    public bool stopped = false;
+
 
     public int currentWaypointIndex = 0;
     Transform targetWaypoint; // set new target waypoint          
@@ -19,11 +22,58 @@ public class FollowPath : MonoBehaviour
     }
     void FixedUpdate()
     {
-        if (currentWaypointIndex >= 0 && currentWaypointIndex < waypoints.Length) // if the waypoint reached is not the last
+        Move(targetWaypoint);
+        if (IsNearWaypoint())
         {
-            Move(targetWaypoint);
-            CheckWaypointDistance();
-        } 
+            targetWaypoint = waypoints[NextWaypointIndex()];
+        }
+    }
+
+    void Move(Transform targetWaypoint)
+    {
+        if (!stopped)
+        {
+            Vector3 direction = (targetWaypoint.position - transform.position).normalized;
+            transform.position += direction * speed * Time.deltaTime; // move enemy
+        }
+    }
+
+
+
+    private bool IsNearWaypoint()
+    {
+        if (Vector3.Distance(transform.position, targetWaypoint.position) < triggerRadius) // if near target waypoint
+        {
+            return true;
+        }
+        return false;
+    }
+
+    private int NextWaypointIndex()
+    {
+        if (!reversing)
+        {
+            if (currentWaypointIndex < waypoints.Length -1)
+            {
+                currentWaypointIndex++;
+                return currentWaypointIndex;
+            }
+        }
+        else
+        {
+            if (currentWaypointIndex > 0)
+            {
+                currentWaypointIndex--;
+                return currentWaypointIndex;
+            }
+
+        }
+        Stop();
+        return currentWaypointIndex;
+    }
+    private void Stop()
+    {
+        stopped = true;
     }
 
     void OnDrawGizmos() // this is so we can visualise the path
@@ -34,38 +84,5 @@ public class FollowPath : MonoBehaviour
             Gizmos.DrawLine(waypoints[i].position, waypoints[i + 1].position);
         }
     }
-    void Move(Transform targetWaypoint)
-    {
-        Vector3 direction = (targetWaypoint.position - transform.position).normalized;
-        transform.position += direction * speed * Time.deltaTime; // move enemy
-    }
 
-    void ChangeDirection()
-    {
-        if (!reversing)
-        {
-            currentWaypointIndex--;
-        }
-        else
-        {
-            currentWaypointIndex++;
-        }
-        reversing = !reversing;
-
-    }
-
-    void CheckWaypointDistance()
-    {
-        if (Vector3.Distance(transform.position, targetWaypoint.position) < 0.1f) // if near target waypoint
-        {
-            if (!reversing && currentWaypointIndex < waypoints.Length)
-            {
-                currentWaypointIndex++; // shift target
-            }else if (currentWaypointIndex > 0)
-            {
-                currentWaypointIndex--;
-            }
-            targetWaypoint = waypoints[currentWaypointIndex];
-        }
-    }
 }
