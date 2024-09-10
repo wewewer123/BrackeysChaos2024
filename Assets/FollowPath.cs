@@ -9,7 +9,9 @@ public class FollowPath : MonoBehaviour
     public Transform[] waypoints; // number of empty game objects that represent the path in straight lines
     public float triggerRadius = 0.1f;
     public float speed = 5f; // enemy speed
-    public bool reversing = false;
+    public bool testReversing = false;
+
+    private bool reversing = false;
     public bool stopped = false;
 
 
@@ -26,6 +28,11 @@ public class FollowPath : MonoBehaviour
         if (IsNearWaypoint())
         {
             targetWaypoint = waypoints[NextWaypointIndex()];
+        }
+        if (testReversing)
+        {
+            Reverse();
+            testReversing = false;
         }
     }
 
@@ -58,6 +65,7 @@ public class FollowPath : MonoBehaviour
                 currentWaypointIndex++;
                 return currentWaypointIndex;
             }
+            Stop();
         }
         else
         {
@@ -68,12 +76,17 @@ public class FollowPath : MonoBehaviour
             }
 
         }
-        Stop();
         return currentWaypointIndex;
     }
     private void Stop()
     {
         stopped = true;
+    }
+
+    public void Reverse()
+    {
+        reversing = !reversing;
+        targetWaypoint = waypoints[NextWaypointIndex()];
     }
 
     void OnDrawGizmos() // this is so we can visualise the path
